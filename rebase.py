@@ -4,6 +4,7 @@ import sys
 import matplotlib.pyplot as plt
 from scipy.signal import butter, filtfilt, lfilter
 from scipy.integrate import cumtrapz
+from math import atan, sqrt
 
 def add_time_diff(df):
     df["time"] = pd.to_datetime(df["time"], format="%H:%M:%S:%f")
@@ -11,6 +12,21 @@ def add_time_diff(df):
     t_deltas = df["time"] - t0
     df["dt"] = t_deltas.values/np.timedelta64(1, 's')
     return
+
+# gets the actual initial orientation of the cell phone using the average of the first n values of the gravity vector
+# assumes that gravity points in the <0, -1, 0> direction
+def get_initial_basis(df, n):
+    init = df.head(n)
+    gx = init["gFx"].mean()
+    gy = init["gFy"].mean()
+    gz = init["gFz"].mean()
+    # print(init)
+    # print(gx, gy, gz)
+    oz_0 = atan(-gx/gy)
+    ox_0 = atan(-gz/sqrt(gx**2+gy**2))
+    oy_0 = 0
+    
+    return (ox_0, oy_0, oz_0)
 
 def filter_w(df):
     sampling_frequency = (df["time"].max()-df["time"].min())/np.timedelta64(1, 's')
@@ -26,11 +42,10 @@ def filter_w(df):
     df["wz"] = filtfilt(b, a, df["wz"])
     return
 
-def integrate_w(df):
-
-    df["ox"] = cumtrapz(df["wx"], x=df["dt"], initial=0)
-    df["oy"] = cumtrapz(df["wy"], x=df["dt"], initial=0)
-    df["oz"] = cumtrapz(df["wz"], x=df["dt"], initial=0)
+def integrate_w(df, o_init):
+    df["ox"] = cumtrapz(df["wx"], x=df["dt"], initial=0) + o_init[0]
+    df["oy"] = cumtrapz(df["wy"], x=df["dt"], initial=0) + o_init[1]
+    df["oz"] = cumtrapz(df["wz"], x=df["dt"], initial=0) + o_init[2]
 
     # ox = pd.Series(cumtrapz(df["wx"], x=df["dt"], initial=0))
     # oy = pd.Series(cumtrapz(df["wy"], x=df["dt"], initial=0))
@@ -46,22 +61,21 @@ def rebase_a(df):
     # if in fact no rotation occurs about y-axis, then applying the transformation will introduce slighlty more noise
     # if in fact significant rotation occurs about y-axis, then not applying the transformation may reduce usefulness of data
 
+    # applying transformation to linear acceleration corresponding to a rotation about y-axis
+    ax_temp = df["ax"]*np.cos(-df["oy"]) + df["az"]*np.sin(-df["oy"])
+    df["az"] = -df["ax"]*np.sin(-df["oy"]) + df["az"]*np.cos(-df["oy"])
+    df["ax"] = ax_temp
+
     # applying transformation to linear acceleration corresponding to a rotation about x-axis
-    ay_temp = df["ay"]*np.cos(df["ox"]) - df["az"]*np.sin(df["ox"])
-    df["az"] = df["ay"]*np.sin(df["ox"]) + df["az"]*np.cos(df["ox"])
+    ay_temp = df["ay"]*np.cos(-df["ox"]) - df["az"]*np.sin(-df["ox"])
+    df["az"] = df["ay"]*np.sin(-df["ox"]) + df["az"]*np.cos(-df["ox"])
     # update the dataframe value for ay after the old values have been used to calculate the new az
     df["ay"] = ay_temp
 
     # applying transformation to linear acceleration corresponding to a rotation about z-axis
-    ax_temp = df["ax"]*np.cos(df["oz"]) - df["ay"]*np.sin(df["oz"])
-    df["ay"] = df["ax"]*np.sin(df["oz"]) + df["ay"]*np.cos(df["oz"])
+    ax_temp = df["ax"]*np.cos(-df["oz"]) - df["ay"]*np.sin(-df["oz"])
+    df["ay"] = df["ax"]*np.sin(-df["oz"]) + df["ay"]*np.cos(-df["oz"])
     df["ax"] = ax_temp
-
-    # applying transformation to linear acceleration corresponding to a rotation about y-axis
-    ax_temp = df["ax"]*np.cos(df["oy"]) + df["az"]*np.sin(df["oy"])
-    df["az"] = -df["ax"]*np.sin(df["oy"]) + df["az"]*np.cos(df["oy"])
-    df["ax"] = ax_temp
-
     return
 
 def plotlin(df, out_desc):
@@ -94,18 +108,27 @@ def plotrot(df, out_desc):
 def main(in_dir):
     df = pd.read_csv(in_dir)
     add_time_diff(df)
-    filter_w(df)
-    integrate_w(df)
-    plotlin(df, "accbefore.png")
+    o_init = get_initial_basis(df, 100)
+    # filter_w(df)
+    df2 = df.copy()
+    integrate_w(df, o_init)
+    plotlin(df, "accbefore0.png")
     rebase_a(df)
-    plotlin(df, "accafterfilter.png")
+    plotlin(df, "accafter0g.png")
+
+    # integrate_w(df2, o_init)
+    # rebase_a(df2)
+    print(o_init)
+    # plotlin(df2, "accafterg3.png")
+
+    # print(df, df2)
     # plotangle(df, "anglebefore.png")
     # plotrot(df, "rotbefore.png")
     # filter_w(df)
     # integrate_w(df)
     # plotangle(df, "angleafter.png")
     # plotrot(df, "rotafter.png")
-    print(df)
+    # print(df)
     return
 
 if __name__=='__main__':
