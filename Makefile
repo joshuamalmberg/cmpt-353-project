@@ -5,8 +5,9 @@
 .PHONY: etl_android
 .PHONY: etl_iphone
 
-clean:
-	rm formatted_data/*.csv
+flush:
+	rm continuous_data/*.csv formatted_data/*.csv
+	
 
 etl_all:
 	python3 etl.py orig_data/iphone/walk/foot/right formatted_data 0 0 0 0
@@ -65,3 +66,7 @@ etl_iphone:
 	python3 etl.py orig_data/iphone/run/foot/left formatted_data 0 1 0 1
 	python3 etl.py orig_data/iphone/run/hand/right formatted_data 0 1 1 0
 	python3 etl.py orig_data/iphone/run/hand/left formatted_data 0 1 1 1
+
+clean_data:
+	python3 remove_discontinuities.py formatted_data continuous_data
+	rm formatted_data/*.csv
