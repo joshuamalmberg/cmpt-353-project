@@ -1,0 +1,5 @@
+#only include the original datasets, these can be produced locally
+formatted_data/*.csv
+
+# Jupyter Notebook
+.ipynb_checkpoints
