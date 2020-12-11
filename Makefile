@@ -86,6 +86,11 @@ features:
 	python3 build_tset.py continuous_data training_data
 
 tset:
+	make etl
 	make clean_data
 	make rebase
 	make features
+
+train:
+	python3 ML_model.py training_data/tset.csv
+
