@@ -8,7 +8,7 @@
 .PHONY: rebase
 
 flush:
-	rm continuous_data/*.csv formatted_data/*.csv
+	rm -f continuous_data/*.csv formatted_data/*.csv
 	
 
 etl:
@@ -71,7 +71,10 @@ etl_iphone:
 
 clean_data:
 	python3 remove_discontinuities.py formatted_data continuous_data
-	rm formatted_data/*.csv
+	rm -f formatted_data/*.csv
 
 rebase:
 	python3 rebase.py continuous_data 1
+
+split_fft:
+	python3 split_fft.py continuous_data

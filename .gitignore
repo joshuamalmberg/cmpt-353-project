@@ -4,3 +4,8 @@ continuous_data/*.csv
 
 # Jupyter Notebook
 .ipynb_checkpoints
+
+#ignore visual studio files
+/.vs/cmpt-353-project/v16/.suo
+/.vs/VSWorkspaceState.json
+/.vs/slnx.sqlite
