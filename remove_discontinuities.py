@@ -60,8 +60,6 @@ def clean_split(extensionless_filename, in_directory, out_directory):
             sub_df.to_csv(dest, index=False)
     return
 
-def filter()
-
 def main(in_dir, out_dir):
     files = [f for f in listdir(in_dir) if isfile(join(in_dir, f))]
     for file in files:
