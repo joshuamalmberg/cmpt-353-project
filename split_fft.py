@@ -11,6 +11,11 @@ from os import listdir
 from os import walk
 from os.path import isfile, join, splitext
 
+
+walk_time = 8
+run_time = 4
+
+
 def calculate_abs(x,y,z):
     acc=np.sqrt(x*x + y*y + z*z)
     return acc
@@ -44,23 +49,22 @@ def filter_and_fft(data):
     data_FT['left'] = side["left"]
     return data_FT
 
-def split(df):
-    n = len(df.index)//1000
-    i = n*1000
-    if n == 0:
-        n = n + 1
-        i = df.count
+def split(df,run):
+    Fs = round(len(df)/df.at[len(df)-1, 'time'])
+    seconds = run_time if run else walk_time
+    n = len(df.index)//(seconds*Fs)
+    i = n*(seconds*Fs)
     temp = df.iloc[0:i]
     array = np.array_split(temp, n)
-    if len(df.index) - i > 200:
-        array.append(df.iloc[i:])
     return array
 
 def fft(file):
     df = pd.read_csv(file)
     neccesary_df = df[["time","ax","ay","az","run", "hand", "left"]]
     neccesary_df['acc']=calculate_abs(neccesary_df['ax'],neccesary_df['ay'],neccesary_df['az'])
-    list_df = split(neccesary_df)
+    run = df["run"].iloc[0]
+    list_df = split(neccesary_df,run)
+    print(list_df)
     list_df_fft = []
     for new_df in list_df:
         list_df_fft.append(filter_and_fft(new_df))
