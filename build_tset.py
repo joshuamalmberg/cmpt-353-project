@@ -91,7 +91,7 @@ def build_features(filepath):
         features = features.append({"min_ax":min_ax, "min_ay":min_ay, "min_az":min_az, "max_ax":max_ax, "max_ay":max_ay, "max_az":max_az, "avg_ax":avg_ax, "avg_ay":avg_ay,"avg_az":avg_az, "run":df["run"].iloc[0], "left":df["left"].iloc[0], "hand":df["hand"].iloc[0]}, ignore_index=True)
     return features
 
-def main(in_dir, out_dir):
+def main(in_dir, out_path):
     tset = pd.DataFrame(columns = ["min_ax", "min_ay", "min_az", "max_ax", "max_ay", "max_az", "avg_ax", "avg_ay", "avg_az", "run", "left", "hand"])
     
     files = [f for f in listdir(in_dir) if isfile(join(in_dir, f))]
@@ -105,10 +105,10 @@ def main(in_dir, out_dir):
         else:
             print('\033[91m'+file+" rejected"+'\u001b[0m')
 
-    tset.to_csv(join(out_dir, "tset.csv"), index=False)
+    tset.to_csv(out_path, index=False)
     return
 
 if __name__=='__main__':
     in_directory = sys.argv[1]
-    out_directory = sys.argv[2]
-    main(in_directory, out_directory)
+    out_path = sys.argv[2]
+    main(in_directory, out_path)

@@ -7,7 +7,8 @@ from scipy.stats import zscore
 from os import listdir
 from os.path import isfile, join, splitext
 
-min_duration = 5
+run_min_duration = 4
+walk_min_duration = 8
 
 def agg_repeated_timestamps(df):
     grouped = df.groupby("time").mean()
@@ -43,6 +44,11 @@ def clean_split(extensionless_filename, in_directory, out_directory):
     # print(discontinuities)
     df["cont_group"] = discontinuities.cumsum()
     # print(df)
+
+    if(df["run"].iloc[0]):
+        min_duration = run_min_duration
+    else:
+        min_duration = walk_min_duration
 
     # this for loop is used to split the dataframe up into pieces, cannot be done strictly with pandas. safe since there are relatively few continuity group in each dataframe. each continuity group generally contains many 100s-1000s of rows
     for i in range(0, df["cont_group"].max()+1):
