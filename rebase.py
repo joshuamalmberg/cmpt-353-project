@@ -119,7 +119,7 @@ def transform(file, naive_init):
         o_init = get_initial_basis(df, 100)
         integrate_w(df, o_init)
     rebase_a(df)
-
+    df = df.drop(labels=["ox", "oz"], axis="columns")
     df.to_csv(file, index=False)
     return
 
