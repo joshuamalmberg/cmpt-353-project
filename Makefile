@@ -82,8 +82,24 @@ split_fft:
 	python3 split_fft.py continuous_data
 
 
+
+
 features:
-	python3 build_tset.py continuous_data training_data
+	python3 build_tset.py continuous_data training_data/tset.csv
+
+tset_android:
+	make flush
+	make etl_android
+	make clean_data
+	make rebase
+	python3 build_tset.py continuous_data training_data/android_tset.csv
+	
+tset_iphone:
+	make flush
+	make etl_iphone
+	make clean_data
+	make rebase
+	python3 build_tset.py continuous_data training_data/iphone_tset.csv
 
 tset:
 	make etl
