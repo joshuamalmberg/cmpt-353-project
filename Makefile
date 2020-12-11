@@ -6,6 +6,8 @@
 .PHONY: etl_iphone
 .PHONY: clean_data
 .PHONY: rebase
+.PHONY: tset
+.PHONY: features
 
 flush:
 	rm -f continuous_data/*.csv formatted_data/*.csv
@@ -78,3 +80,12 @@ rebase:
 
 split_fft:
 	python3 split_fft.py continuous_data
+
+
+features:
+	python3 build_tset.py continuous_data training_data
+
+tset:
+	make clean_data
+	make rebase
+	make features
