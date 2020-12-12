@@ -1,69 +1,131 @@
 import pandas as pd
+import numpy as np
 import sys
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestClassifier
 
+from os import listdir
+from os.path import isfile, join, splitext
 
-run_in_dir = sys.argv[1]
-walk_in_dir = sys.argv[2]
+column_names = ["time","wx","wy","wz","ax","ay","az","run","hand","left"]
 
-run_data = pd.read_csv(run_in_dir, parse_dates = ["time"], index_col = False)
-run_data = run_data.drop(labels="Unnamed: 7", axis="columns")
+df = pd.DataFrame(columns = column_names)
 
-walk_data = pd.read_csv(walk_in_dir, parse_dates = ["time"], index_col = False)
-walk_data = walk_data.drop(labels="Unnamed: 7", axis="columns")
+in_dir1 = sys.argv[1]
+in_dir2 = sys.argv[2]
 
-walk_data1 = pd.read_csv("data/participant2/walking/left_ankle/l_ankle_walk1.csv", parse_dates = ["time"], index_col = False)
-walk_data1 = walk_data1.drop(labels="Unnamed: 7", axis="columns")
+tot = 0
 
-run_data1 = pd.read_csv("data/participant2/running/l_ankle_run.csv", parse_dates = ["time"], index_col=False)
-run_data1 = run_data1.drop(labels="Unnamed: 7", axis="columns")
+files = [f for f in listdir(in_dir1) if isfile(join(in_dir1, f))]
+for file in files:
+    filename, ext = splitext(file)
+    if(ext == ".csv"):
+        filepath = join(in_dir1, file)
+        part = pd.read_csv(filepath)
+        tot += part["time"].count()
+        # print(part["time"].count())
+        df  = df.append(part)
+        print('\033[92m'+"Added "+file+'\u001b[0m')
+    else:
+        print('\033[91m'+file+" rejected"+'\u001b[0m')
 
-run_data["running"] = 1
-run_data1["running"] = 1
-
-walk_data["running"] = 0
-walk_data1["running"] = 0
-
-data = walk_data.append(run_data)
-data = data.reset_index(drop=True)
-
-data1 = walk_data1.append(run_data1)
-data1 = data1.reset_index(drop=True)
-
-# print(run_data)
-# print(run_data.describe())
-
-# print(walk_data)
-# print(walk_data.describe())
-
-# print(data)
-# print(data.describe())
+data = df.reset_index(drop=True)
+# print(df)
+# print(tot)
 
 X = data.filter(["ax", "ay", "az", "wx", "wy", "wz"])
-y = data["running"]
+y = data["run"].astype('int') # data.filter(["run"])
 
-X1 = data1.filter(["ax", "ay", "az", "wx", "wy", "wz"])
-y1 = data1["running"]
+X_train, X_test, y_train, y_test = train_test_split(X.values, y.values, train_size = 0.75, random_state = 9293)
 
-X_train, X_test, y_train, y_test = train_test_split(X.values, y.values, train_size = 0.5, random_state = 9293)
+model = RandomForestClassifier(n_estimators=10, random_state=1)
 
-# model = RandomForestClassifier(n_estimators=100, random_state=1)
+model.fit(X_train, y_train)
 
-# model.fit(X_train, y_train)
+print("Score when splitting training and testing sets randomly from entire dataset:", model.score(X_test, y_test))
 
-# print(model.score(X_test, y_test))
-# print(model.score(X1, y1))
+running = data[data["run"] == 1]
+walking = data[data["run"] == 0]
 
-print(data1)
-print(data1.describe())
+print(running.describe())
+print(walking.describe())
+
+running_test_size = running["time"].count()//4
+walking_test_size = walking["time"].count()//4
+
+running_train_size = running_test_size*3
+walking_train_size = walking_test_size*3
+
+data_train = running.head(running_train_size).append(walking.head(walking_train_size))
+data_test = running.tail(running_test_size).append(walking.tail(walking_test_size))
+
+data_train = data_train.sample(frac = 1).reset_index(drop=True)
+data_test = data_train.sample(frac = 1).reset_index(drop=True)
+
+data_train_X = data_train.filter(["ax", "ay", "az", "wx", "wy", "wz"]).values
+data_train_y = data_train["run"].astype("int").values
+
+X_train1, empty, y_train1, empty1 = train_test_split(data_train_X, data_train_y, train_size = 0.99, random_state = 9293)
+
+data_test_X = data_test.filter(["ax", "ay", "az", "wx", "wy", "wz"]).values
+data_test_y = data_test["run"].astype("int").values
+
+empty, X_test1, empty, y_test1 = train_test_split(data_test_X, data_test_y, train_size = 0.01, random_state = 1000)
 
 
+# X_train1 = running.head(running_train_size).filter(["ax", "ay", "az"])
+# X_train1 = X_train1.append(walking.head(walking_train_size).filter(["ax", "ay", "az"]))
 
-# print(acceleration_data)
-# print(acceleration_data.describe())
+# y_train1 = running.head(running_train_size)["run"].astype("int")
+# y_train1 = y_train1.append(walking.head(walking_train_size)["run"].astype("int"))
 
-# print(new)
-# print(new.describe())
+# X_test1 = running.tail(running_test_size).filter(["ax", "ay", "az"])
+# X_test1 = X_test1.append(walking.tail(walking_test_size).filter(["ax", "ay", "az"]))
+
+# y_test1 = running.tail(running_test_size)["run"].astype("int")
+# y_test1 = y_test1.append(walking.tail(walking_test_size)["run"].astype("int"))
+
+# print(X_train1)
+# print(y_train1)
+
+# X_train1 = X_train1.sample(frac = 1).reset_index(drop=True)
+# y_train1 = y_train1.sample(frac = 1).reset_index(drop=True)
+
+# X_test1 = X_test1.sample(frac = 1).reset_index(drop=True)
+# y_test1 = y_test1.sample(frac = 1).reset_index(drop=True)
+
+print(model.score(X_test1, y_test1))
+
+model.fit(X_train1, y_train1)
+# predicted = model.predict(X_test1.values)
+# print(np.sum(predicted), np.shape(predicted))
+# print(y_test1.sum(), y_test1.count())
+
+print("Score when using first 3/4 of data set as training set and later 1/4 as testing set:", model.score(X_test1, y_test1))
+
+df = pd.DataFrame(columns = column_names)
+
+files = [f for f in listdir(in_dir2) if isfile(join(in_dir2, f))]
+for file in files:
+    filename, ext = splitext(file)
+    if(ext == ".csv"):
+        filepath = join(in_dir2, file)
+        part = pd.read_csv(filepath)
+        tot += part["time"].count()
+        # print(part["time"].count())
+        df  = df.append(part)
+        print('\033[92m'+"Added "+file+'\u001b[0m')
+    else:
+        print('\033[91m'+file+" rejected"+'\u001b[0m')
+
+data2 = df.reset_index(drop=True)
+
+X2 = data.filter(["ax", "ay", "az", "wx", "wy", "wz"])
+y2 = data["run"].astype('int') # data.filter(["run"])
+
+empty, X2_test, empty1, y2_test = train_test_split(X2.values, y2.values, train_size = 0.01, random_state = 100120)
+
+print(model.score(X2.values, y2.values))
+
