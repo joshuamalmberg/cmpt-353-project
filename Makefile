@@ -78,7 +78,7 @@ clean_data:
 	rm -f formatted_data/*.csv
 
 rebase:
-	python3 rebase.py continuous_data 1
+	python3 rebase.py continuous_data
 
 split_fft:
 	python3 split_fft.py continuous_data
