@@ -69,6 +69,21 @@ def fft(file):
         list_df_fft.append(filter_and_fft(new_df))
     return list_df_fft
 
+def normalize_features(df):
+    max_amplitude_ax = abs(features["max_ax"].max()) if abs(features["max_ax"].max()) > abs(features["min_ax"].min()) else abs(features["min_ax"].min())
+    max_amplitude_ay = abs(features["max_ay"].max()) if abs(features["max_ay"].max()) > abs(features["min_ay"].min()) else abs(features["min_ay"].min())
+    max_amplitude_az = abs(features["max_az"].max()) if abs(features["max_az"].max()) > abs(features["min_az"].min()) else abs(features["min_az"].min())
+    features["min_ax"] = features["min_ax"]/max_amplitude_ax
+    features["max_ax"] = features["max_ax"]/max_amplitude_ax
+    features["avg_ax"] = features["avg_ax"]/max_amplitude_ax
+    features["min_ay"] = features["min_ay"]/max_amplitude_ay
+    features["max_ay"] = features["max_ay"]/max_amplitude_ay
+    features["avg_ay"] = features["avg_ay"]/max_amplitude_ay
+    features["min_az"] = features["min_az"]/max_amplitude_az
+    features["max_az"] = features["max_az"]/max_amplitude_az
+    features["avg_az"] = features["avg_az"]/max_amplitude_az
+    return features
+
 def build_features(filepath):
     df = pd.read_csv(filepath)
     sampling_frequency = df["time"].count()/(df["time"].max()-df["time"].min())
@@ -87,8 +102,8 @@ def build_features(filepath):
         avg_ax = subdf["ax"].abs().mean()
         avg_ay = subdf["ay"].abs().mean()
         avg_az = subdf["az"].abs().mean()
-
         features = features.append({"min_ax":min_ax, "min_ay":min_ay, "min_az":min_az, "max_ax":max_ax, "max_ay":max_ay, "max_az":max_az, "avg_ax":avg_ax, "avg_ay":avg_ay,"avg_az":avg_az, "run":df["run"].iloc[0], "left":df["left"].iloc[0], "hand":df["hand"].iloc[0]}, ignore_index=True)
+    #features = normalize_features(features)
     return features
 
 def main(in_dir, out_path):

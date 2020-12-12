@@ -92,6 +92,7 @@ tset_android:
 	make clean_data
 	make rebase
 	python3 build_tset.py continuous_data training_data/android_tset.csv
+	python3 ML_model.py training_data/android_tset.csv
 
 tset_iphone:
 	make flush
@@ -99,6 +100,7 @@ tset_iphone:
 	make clean_data
 	make rebase
 	python3 build_tset.py continuous_data training_data/iphone_tset.csv
+	python3 ML_model.py training_data/iphone_tset.csv
 
 tset:
 	make etl

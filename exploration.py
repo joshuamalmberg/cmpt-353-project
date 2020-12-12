@@ -4,8 +4,11 @@ import sys
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
-from sklearn.ensemble import RandomForestClassifier
-
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, VotingClassifier
+from sklearn.ensemble import AdaBoostClassifier
 from os import listdir
 from os.path import isfile, join, splitext
 
@@ -21,7 +24,9 @@ tot = 0
 files = [f for f in listdir(in_dir1) if isfile(join(in_dir1, f))]
 for file in files:
     filename, ext = splitext(file)
+    print(file)
     if(ext == ".csv"):
+        
         filepath = join(in_dir1, file)
         part = pd.read_csv(filepath)
         tot += part["time"].count()
@@ -32,7 +37,7 @@ for file in files:
         print('\033[91m'+file+" rejected"+'\u001b[0m')
 
 data = df.reset_index(drop=True)
-# print(df)
+print(df)
 # print(tot)
 
 X = data.filter(["ax", "ay", "az", "wx", "wy", "wz"])
@@ -40,12 +45,22 @@ y = data["run"].astype('int') # data.filter(["run"])
 
 X_train, X_test, y_train, y_test = train_test_split(X.values, y.values, train_size = 0.75, random_state = 9293)
 
-model = RandomForestClassifier(n_estimators=10, random_state=1)
 
-model.fit(X_train, y_train)
 
-print("Score when splitting training and testing sets randomly from entire dataset:", model.score(X_test, y_test))
+nb_model = GaussianNB()
+nb_model.fit(X_train, y_train)
+print("Naive Bayes model score: ", nb_model.score(X_test, y_test))
 
+kNN_model = KNeighborsClassifier(n_neighbors=10)
+kNN_model.fit(X_train, y_train)
+print("K Nearest Neighbours model score: ", kNN_model.score(X_test, y_test))
+rf_model = RandomForestClassifier(n_estimators=100, max_depth=8)
+rf_model.fit(X_train, y_train)
+print("Random Forest model score: ", rf_model.score(X_test, y_test))
+clf = AdaBoostClassifier(n_estimators=100, random_state=0)
+clf.fit(X_train, y_train)
+print("AdaBoost model score: ", clf.score(X_test, y_test))
+exit()
 running = data[data["run"] == 1]
 walking = data[data["run"] == 0]
 

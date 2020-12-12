@@ -5,6 +5,8 @@ from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import StackingClassifier
+from sklearn.ensemble import AdaBoostClassifier
 
 import pandas as pd
 import numpy as np
@@ -31,6 +33,10 @@ def train_on_extracted(filepath):
     rf_model.fit(X_train, y_train)
     print("Random Forest model score: ", rf_model.score(X_test, y_test))
 
+
+    clf = AdaBoostClassifier(n_estimators=100, random_state=0)
+    clf.fit(X_train, y_train)
+    print("AdaBoost model score: ", clf.score(X_test, y_test))
     return
 
 def main(filepath):
