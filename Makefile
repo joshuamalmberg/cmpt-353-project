@@ -12,6 +12,8 @@
 flush:
 	rm -f continuous_data/*.csv formatted_data/*.csv
 	
+flush_tset:
+	rm -f training_data/*.csv
 
 etl:
 	python3 etl.py orig_data/iphone/walk/foot/right formatted_data 0 0 0 0
@@ -81,9 +83,6 @@ rebase:
 split_fft:
 	python3 split_fft.py continuous_data
 
-
-
-
 features:
 	python3 build_tset.py continuous_data training_data/tset.csv
 
@@ -93,7 +92,7 @@ tset_android:
 	make clean_data
 	make rebase
 	python3 build_tset.py continuous_data training_data/android_tset.csv
-	
+
 tset_iphone:
 	make flush
 	make etl_iphone
