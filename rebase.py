@@ -138,5 +138,5 @@ def main(in_dir, naive_init):
 
 if __name__=='__main__':
     in_directory = sys.argv[1]
-    naive_init = sys.argv[2]
-    main(in_directory, naive_init)
+    # naive_init = sys.argv[2]
+    main(in_directory, "1")
